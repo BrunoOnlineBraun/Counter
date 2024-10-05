@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steigende Zahl Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; 
+            width: 100vw;  
+            margin: 0;
+            background-color: #f7f7f7;
+            color: #333;
+            padding: 1rem; 
+            box-sizing: border-box; 
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;  
+            max-width: 600px; 
+            max-height: 80vh; 
+        }
+
+        #input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%; 
+            padding: 1rem; 
+            box-sizing: border-box; 
+        }
+
+        .input-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            width: 100%; 
+        }
+
+        input[type="number"], select {
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            flex-grow: 1; 
+            min-width: 0; 
+        }
+
+        button, #start-button, #precision-button, #unit-selector {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        #start-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        #start-button:hover {
+            background-color: #218838;
+        }
+
+        #stop-button {
+            background-color: #dc3545;
+            color: white;
+            position: fixed;
+            top: 70%;
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            text-align: center;
+        }
+
+
+        #stop-button:hover {
+            background-color: #c82333;
+        }
+
+        #precision-button {
+            background-color: #007bff;
+            color: white;
+            margin-top: 1rem;
+        }
+
+        #precision-button:hover {
+            background-color: #0056b3;
+        }
+
+        #unit-selector {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            margin-top: 1rem;
+            padding: 0.75rem;
+        }
+
+        button {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        button:hover {
+            background-color: #e0a800;
+        }
+
+        .remove-button {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .remove-button:hover {
+            background-color: #f1b0b7;
+        }
+
+        #counter {
+            font-size: 6rem;
+            margin-top: 2rem;
+            color: #343a40;
+            min-width: 25ch; 
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="input-section">
+            <div class="input-row">
+                <input type="number" id="value-1" min="0.001" max="100000000" step="0.001" placeholder="Zahl">
+                <input type="number" id="time-1" min="0.001" step="0.001" placeholder="Zeit">
+                <select id="time-unit-1">
+                    <option value="1">Sekunden</option>
+                    <option value="60">Minuten</option>
+                    <option value="3600">Stunden</option>
+                    <option value="86400">Tage</option>
+                    <option value="2628000">Monate</option>
+                    <option value="31536000">Jahre</option>
+                </select>
+                <button onclick="addInputRow()">+</button>
+            </div>
+        </div>
+        <div>
+            <button id="start-button" onclick="startCounter()">Start</button>
+            <button id="precision-button" onclick="changePrecision()">2 Nachkommastellen</button>
+            <select id="unit-selector">
+                <option value="">Einheit weglassen</option>
+                <option value="€">Euro (€)</option>
+                <option value="L">Liter (L)</option>
+                <option value="kg">Kilogramm (kg)</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="counter-section" style="display:none;">
+        <div id="counter">0</div>
+        <button id="stop-button" onclick="stopCounter()">Stop</button>
+    </div>
+
+    <script>
+        let counterInterval;
+        let inputIndex = 1;
+        let precision = 2;
+
+        function addInputRow() {
+            inputIndex++;
+            const inputSection = document.getElementById('input-section');
+            const newRow = document.createElement('div');
+            newRow.className = 'input-row';
+            newRow.id = 'input-row-' + inputIndex;
+            newRow.innerHTML = `
+                <input type="number" id="value-${inputIndex}" min="0.001" max="100000000" step="0.001" placeholder="Zahl">
+                <input type="number" id="time-${inputIndex}" min="0.001" step="0.001" placeholder="Zeit">
+                <select id="time-unit-${inputIndex}">
+                    <option value="1">Sekunden</option>
+                    <option value="60">Minuten</option>
+                    <option value="3600">Stunden</option>
+                    <option value="86400">Tage</option>
+                    <option value="2628000">Monate</option>
+                    <option value="31536000">Jahre</option>
+                </select>
+                <button class="remove-button" onclick="removeInputRow(${inputIndex})">-</button>
+            `;
+            inputSection.appendChild(newRow);
+        }
+
+        function removeInputRow(index) {
+            const row = document.getElementById('input-row-' + index);
+            if (row) {
+                row.remove();
+            }
+        }
+
+        function startCounter() {
+            const values = [];
+            const times = [];
+            for (let i = 1; i <= inputIndex; i++) {
+                const valueInput = document.getElementById('value-' + i);
+                const timeInput = document.getElementById('time-' + i);
+                const timeUnitSelect = document.getElementById('time-unit-' + i);
+                if (valueInput && timeInput && timeUnitSelect) {
+                    const value = parseFloat(valueInput.value);
+                    const time = parseFloat(timeInput.value);
+                    const timeUnit = parseFloat(timeUnitSelect.value);
+                    if (!isNaN(value) && !isNaN(time)) {
+                        if (values.length > 0 && value <= values[values.length - 1]) {
+                            alert('Die Werte müssen jeweils größer als die vorherigen sein.');
+                            return;
+                        }
+                        values.push(value);
+                        times.push(time * timeUnit);
+                    }
+                }
+            }
+
+            if (values.length === 0 || times.length === 0) {
+                alert('Bitte geben Sie gültige Werte und Zeiten ein.');
+                return;
+            }
+
+            document.getElementById('container').style.display = 'none';
+            document.getElementById('counter-section').style.display = 'block';
+
+            let totalElapsedTime = 0;
+            let currentPhase = 0;
+            let startValue = 0;
+            let endValue = values[currentPhase];
+            let currentPhaseStartTime = 0;
+
+            counterInterval = setInterval(() => {
+                totalElapsedTime += 0.01;
+
+                while (totalElapsedTime - currentPhaseStartTime > times[currentPhase] && currentPhase < values.length - 1) {
+                    currentPhaseStartTime += times[currentPhase];
+                    startValue = values[currentPhase];
+                    currentPhase++;
+                    endValue = values[currentPhase];
+                }
+
+                let phaseProgress = (totalElapsedTime - currentPhaseStartTime) / times[currentPhase];
+                let currentValue = startValue + (endValue - startValue) * phaseProgress;
+
+                updateCounter(currentValue);
+
+                if (currentPhase === values.length - 1 && phaseProgress >= 1) {
+                    clearInterval(counterInterval);
+                    updateCounter(endValue);
+                }
+            }, 10);
+        }
+
+        function stopCounter() {
+            clearInterval(counterInterval);
+            document.getElementById('container').style.display = 'block';
+            document.getElementById('counter-section').style.display = 'none';
+        }
+
+        function updateCounter(value) {
+            const unit = document.getElementById('unit-selector').value;
+            document.getElementById('counter').innerText = value.toLocaleString('de-DE', { minimumFractionDigits: precision, maximumFractionDigits: precision }) + (unit ? ' ' + unit : '');
+        }
+
+        function changePrecision() {
+            precision = (precision + 1) % 4;
+            document.getElementById('precision-button').innerText = `${precision} Nachkommastellen`;
+        }
+    </script>
+</body>
+</html>
